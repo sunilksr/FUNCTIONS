@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract MyToken is ERC20 {
+    address public inheritor;
+
+    event TokensMinted(address indexed inheritor, uint256 tokenCount);
+    event TokensBurned(address indexed burner, uint256 tokenCount);
+    event TokensTransferred(address indexed sender, address indexed inheritor, uint256 tokenCount);
+
+    modifier onlyOwner() {
+        require(msg.sender == inheritor, "Only the owner is authorized to perform this action");
+        _;
+    }
+
+    constructor(string memory _tokenName, string memory _tokenSymbol) ERC20(_tokenName, _tokenSymbol) {
+        inheritor = msg.sender;
+        _mint(msg.sender, 1000); 
+    }
+
+    function mintTokens(address _inheritor, uint256 _tokenCount) public onlyOwner {
+        require(_inheritor != address(0), "Invalid inheritor address");
+        require(_tokenCount > 0, "Token count must be greater than 0");
+
+        _mint(_inheritor, _tokenCount);
+
+        emit TokensMinted(_inheritor, _tokenCount);
+    }
+
+    function burnTokens(uint256 _tokenCount) public {
+        require(_tokenCount > 0, "Token count must be greater than 0");
+
+        _burn(msg.sender, _tokenCount);
+
+        emit TokensBurned(msg.sender, _tokenCount);
+    }
+
+    function transferTokens(address _inheritor, uint256 _tokenCount) public {
+        require(_inheritor != address(0), "Invalid inheritor address");
+        require(_tokenCount > 0, "Token count must be greater than 0");
+
+        _transfer(msg.sender, _inheritor, _tokenCount);
+
+        emit TokensTransferred(msg.sender, _inheritor, _tokenCount);
+    }
+}
